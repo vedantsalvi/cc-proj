@@ -133,6 +133,9 @@
         function predictFare(data) {
             let fare = MODEL.intercept;
             
+            // Add journey day effect
+            fare += MODEL.journey_day_coeffs[data.Journey_day];
+            
             // Add airline effect
             fare += MODEL.airline_coeffs[data.Airline];
             
@@ -141,9 +144,6 @@
             
             // Add stops effect
             fare += MODEL.stops_coeffs[data.Total_stops];
-            
-            // Add day effect
-            fare += MODEL.day_coeffs[data.Journey_day];
             
             // Add duration effect
             fare += data.Duration_in_hours * MODEL.duration_coeff;
