@@ -115,7 +115,7 @@
 
     <script>
         // Configuration for the Azure ML endpoint
-        const SCORING_URI = "http://aadde018-752b-4227-a0c7-6fd6ce4afb12.centralindia.azurecontainer.io/score";
+        const SCORING_URI = "YOUR_AZURE_ENDPOINT_URL";
         const API_KEY = "YOUR_API_KEY";
 
         // Simple regression model coefficients (replace with actual values from your model)
@@ -133,9 +133,6 @@
         function predictFare(data) {
             let fare = MODEL.intercept;
             
-            // Add journey day effect
-            fare += MODEL.journey_day_coeffs[data.Journey_day];
-            
             // Add airline effect
             fare += MODEL.airline_coeffs[data.Airline];
             
@@ -144,6 +141,9 @@
             
             // Add stops effect
             fare += MODEL.stops_coeffs[data.Total_stops];
+            
+            // Add day effect
+            fare += MODEL.day_coeffs[data.Journey_day];
             
             // Add duration effect
             fare += data.Duration_in_hours * MODEL.duration_coeff;
