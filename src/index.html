@@ -105,61 +105,67 @@
     </div>
 
     <script>
-        const SCORING_URI = "http://aadde018-752b-4227-a0c7-6fd6ce4afb12.centralindia.azurecontainer.io/score";
+       const SCORING_URI = "http://aadde018-752b-4227-a0c7-6fd6ce4afb12.centralindia.azurecontainer.io/score";
 
-        document.getElementById("fareForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
+document.getElementById("fareForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-            const data = {
-                Journey_day: parseInt(document.getElementById("journeyDay").value),
-                Airline: parseInt(document.getElementById("airline").value),
-                Class: parseInt(document.getElementById("flightClass").value),
-                Total_stops: parseInt(document.getElementById("stops").value),
-                Duration_in_hours: parseFloat(document.getElementById("duration").value),
-                Days_left: parseInt(document.getElementById("daysLeft").value)
-            };
+    const duration = document.getElementById("duration").value;
+    const daysLeft = document.getElementById("daysLeft").value;
 
-            document.getElementById("loading").classList.remove("hidden");
-            document.getElementById("result").classList.add("hidden");
+    if (!duration || !daysLeft) {
+        alert("Please fill in all fields");
+        return;
+    }
 
-            try {
-                const response = await fetch(SCORING_URI, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
+    const resultDiv = document.getElementById("result");
+    const loadingDiv = document.getElementById("loading");
 
-                const responseText = await response.text();
+    loadingDiv.classList.remove("hidden");
+    resultDiv.classList.add("hidden");
 
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                    if (typeof result === "string") {
-                        result = JSON.parse(result);
-                    }
-                } catch (error) {
-                    console.error("JSON parsing error:", error);
-                }
+    const data = {
+        Journey_day: parseInt(document.getElementById("journeyDay").value),
+        Airline: parseInt(document.getElementById("airline").value),
+        Class: parseInt(document.getElementById("flightClass").value),
+        Total_stops: parseInt(document.getElementById("stops").value),
+        Duration_in_hours: parseFloat(document.getElementById("duration").value),
+        Days_left: parseInt(document.getElementById("daysLeft").value)
+    };
 
-                if (response.ok && result && result.predicted_fare !== undefined) {
-                    displayResult(result.predicted_fare);
-                } else {
-                    throw new Error("Unexpected response format");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Failed to fetch prediction. Please try again later.");
-                document.getElementById("loading").classList.add("hidden");
-            }
+    try {
+        const response = await fetch(SCORING_URI, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ data })  // Sending JSON in the correct format
         });
 
-        function displayResult(fare) {
-            document.getElementById("loading").classList.add("hidden");
-            document.getElementById("fare-amount").innerText = `₹${fare.toLocaleString()}`;
-            document.getElementById("result").classList.remove("hidden");
+        if (response.ok) {
+            let result = await response.json();
+
+            // Some Azure responses are double-encoded, handle that
+            if (typeof result === "string") {
+                result = JSON.parse(result);
+            }
+
+            if (result && result.predicted_fare !== undefined) {
+                displayResult(result.predicted_fare);
+            } else {
+                throw new Error("Invalid response format");
+            }
+        } else {
+            throw new Error("API request failed");
         }
+    } catch (error) {
+        console.log("Error:", error);
+        alert("Failed to fetch prediction. Please try again later.");
+    } finally {
+        loadingDiv.classList.add("hidden");
+    }
+});
+
     </script>
 </body>
 </html>
